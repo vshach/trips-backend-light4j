@@ -1,0 +1,329 @@
+---
+openapi: "3.0.4"
+info:
+  title: "Vicas Trips - OpenAPI 3.0"
+  description: "Vicas trips: photos and routes"
+  contact:
+    email: "vicush.s@gmail.com"
+  license:
+    name: "Apache 2.0"
+    url: "https://www.apache.org/licenses/LICENSE-2.0.html"
+  version: "1.0.12"
+servers:
+  - url: "http://localhost:8080/api/v1"
+    description: "Local development server"
+tags:
+  - name: "locations"
+    description: "showing the names of all possible locations"
+  - name: "photos"
+    description: "showing photos searched by location and date"
+  - name: "routes"
+    description: "Operations about showing routes"
+paths:
+  /locations:
+    get:
+      tags:
+        - "locations"
+      summary: "Finds all possible locations."
+      responses:
+        "200":
+          description: "successful operation"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Location"
+  /files/upload:
+    post:
+      operationId : fileUpload
+      summary: Upload a photo and metadata
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/FileUpload"
+      responses:
+        '200':
+          description: Upload successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+  /photos/update/{photoNum}:
+    put:
+      tags:
+        - "photos"
+      summary: "Update photo with the id provided"
+      operationId : updatePhoto
+      parameters:
+        - name: "photoNum"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/PhotoInfo"
+      responses:
+        "200":
+          description: "Successful response"
+
+  /photos/{locid}/{date}:
+    get:
+      tags:
+        - "photos"
+      summary: "Get photo by location ID and taken SINCE the date provided"
+      operationId : photosLocidSINCEDate
+      parameters:
+        - name: "locid"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+          description: "The ID of the location of the photo"
+        - name: "date"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "date"
+          description: "The date of the photo (YYYY-MM-DD)"
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Photo"
+  /photos/exact/{locid}/{date}:
+    get:
+      tags:
+        - "photos"
+      summary: "Get photo by location ID and taken on the EXACT date provided"
+      operationId : photosLocidExactDate
+      parameters:
+        - name: "locid"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+          description: "The ID of the location of the photo"
+        - name: "date"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+            format: "date"
+          description: "The date of the photo (YYYY-MM-DD)"
+      responses:
+        "200":
+          description: "Successful response"
+          content:
+            application/json:
+              schema:
+                type: "array"
+                items:
+                  $ref: "#/components/schemas/Photo"
+
+  /stops/years:
+    get:
+      tags:
+        - "routes"
+      summary: "show all the years stops were made"
+      operationId: stopsYears
+      responses:
+        '200':
+          description: A list of years
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /stops/dates/byyear/{year}:
+    get:
+      tags:
+        - "routes"
+      summary: "show all the dates stops were made in the year given"
+      operationId: stopsYearsDates
+      parameters:
+        - name: "year"
+          in: "path"
+          required: true
+          schema:
+            type: "integer"
+          description: "year in which to look for trip dates"
+          example : 2011
+      responses:
+        '200':
+          description: A list of dates for the given year
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  type: string
+  /stops/bydate/{date}:
+    get:
+      tags:
+        - "routes"
+      summary: "show all the locations stops were made on the given date"
+      operationId: stopsByDate
+      parameters:
+        - name: "date"
+          in: "path"
+          required: true
+          schema:
+            type: "string"
+          description: "date on which to look for stops locations"
+          example : 2011-02-01
+      responses:
+        '200':
+          description: A list of dates for the given year
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StopsResponse'
+
+  /photos:
+    get:
+      summary: Serve my uploaded photo files
+      parameters:
+        - name: filepath
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Relative file path, e.g. "2023/01Jan-15/IMG_123.jpg"
+      responses:
+        '200':
+          description: Photo file content
+          content:
+            image/jpeg:
+              schema:
+                type: string
+                format: binary
+        '404':
+          description: File not found
+      #x-lightapi-handler: com.vica.trips.handler.StaticFileHandler
+
+components:
+  schemas:
+    Photo:
+      required:
+        - "id"
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+          example: 13
+        dateTaken:
+          type: "string"
+          example: "2011-06-25"
+        locationID:
+          type: "integer"
+          example: 11
+        people:
+          type: "string"
+          example: "Vica,Zahav"
+        filepath:
+          type: "string"
+          example: "http://localhost:8080/uploads/2011/06Jun-25/Day 3 (126).JPG"
+    FileUpload:
+      required:
+        - "id"
+      type: "object"
+      properties:
+        photo:
+          type: string
+          format: binary
+          description: The photo file to upload
+        people:
+          type: string
+          description: names of people in the photo separated by a comma
+        locationID:
+          type: string
+          description: id of the place photo was taken at
+        date:
+          type: string
+          description: date the photo was taken, 2011-01-16
+    PhotoInfo:
+      type: object
+      properties:
+        dateTaken:
+          type: "string"
+          example: "2011-06-25"
+        locationID:
+          type: "integer"
+          example: 11
+        people:
+          type: "string"
+          example: "Vica,Zahav"
+          description: names of people in the photo separated by a comma
+    Stop:
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+          example: 5
+        name:
+          type: "string"
+          example: "Gilboa"
+        latitude:
+          type: "string"
+          example: "32.535100"
+        longitude:
+          type: "string"
+          example: "35.374893"
+        dayorder:
+          type: "integer"
+          format: "int64"
+          example: 2
+          description: the number of the stop in the day. For the example 2 will mean second stop that day
+    StopsResponse:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+          example: "2023-01-11"
+        listStops:
+          type: array
+          items:
+            $ref: '#/components/schemas/Stop'
+    Location:
+      required:
+        - "id"
+        - "name"
+      type: "object"
+      properties:
+        id:
+          type: "integer"
+          format: "int64"
+          example: 5
+        name:
+          type: "string"
+          example: "Gilboa"
+        latitude:
+          type: "string"
+          example: "32.535100"
+        longitude:
+          type: "string"
+          example: "35.374893"
+        description:
+          type: "string"
+          example: "Gilboa Katef Shaul"
+      xml:
+        name: "location"

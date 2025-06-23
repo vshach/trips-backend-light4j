@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE configuration
+        PUBLIC "-//mybatis.org//DTD Config 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-config.dtd">
+
+<configuration>
+    <environments default="development">
+        <environment id="development">
+            <transactionManager type="JDBC"/>
+            <dataSource type="POOLED">
+                <property name="driver" value="com.microsoft.sqlserver.jdbc.SQLServerDriver"/>
+                <!--property name="url" value="jdbc:sqlserver://localhost:1433;databaseName=YourDatabaseName"/ -->
+                <property name="url" value="jdbc:sqlserver://your-database-connection" />
+                <property name="username" value="your-username"/>
+                <property name="password" value="your-password"/>
+            </dataSource>
+        </environment>
+    </environments>
+
+    <mappers>
+        <!-- You can use class-based mappers or XML files -->
+        <!--mapper resource="mappers/PhotoMapper.xml"/ -->
+        <!-- Or, for annotation-based -->
+        <mapper class="com.vica.trips.mappers.PhotoMapper" />
+        <mapper class="com.vica.trips.mappers.LocationMapper" />
+        <mapper class="com.vica.trips.mappers.StopsMapper" />
+    </mappers>
+</configuration>
